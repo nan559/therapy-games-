@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1530;
+    --bg2: #251d45;
+    --card: #2e2456;
+    --card-light: #3a2e68;
+    --ink: #f4f0ff;
+    --muted: #b3a8d6;
+    --gold: #ffd166;
+    --gold-deep: #f0a500;
+    --pink: #ff6bb3;
+    --mint: #5fe3c0;
+    --sky: #6bc6ff;
+    --lav: #c08cff;
+    --shadow: rgba(10,5,30,0.45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fredoka', sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(192,140,255,0.18), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(255,107,179,0.15), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(95,227,192,0.12), transparent 50%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 24px;
+    overflow-x: hidden;
+  }
+
+  /* floating stars background */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; color: var(--gold); opacity: 0.5;
+    animation: twinkle 3s ease-in-out infinite;
+    font-size: 14px;
+  }
+  @keyframes twinkle { 0%,100%{opacity:0.2; transform:scale(0.8);} 50%{opacity:0.8; transform:scale(1.2);} }
+
+  .wrap { max-width: 760px; margin: 0 auto; position: relative; z-index: 1; }
+
+  header { text-align: center; margin-bottom: 18px; }
+  h1 {
+    font-size: 2.6rem; font-weight: 700;
+    background: linear-gradient(90deg, var(--gold), var(--pink), var(--lav));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+  }
+  .tag { color: var(--muted); font-size: 1rem; margin-top: 2px; }
+
+  /* score bar */
+  .hud {
+    display: flex; gap: 12px; justify-content: center; align-items: center;
+    margin: 16px 0 24px;
+  }
+  .chip {
+    background: var(--card); border-radius: 18px; padding: 10px 18px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 6px 16px var(--shadow); font-weight: 600;
+  }
+  .chip .big { font-size: 1.4rem; color: var(--gold); }
+  .level-chip .big { color: var(--mint); }
+
+  .card {
+    background: var(--card); border-radius: 26px; padding: 28px;
+    box-shadow: 0 16px 40px var(--shadow);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .screen { display: none; animation: fade .4s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  h2 { font-size: 1.5rem; margin-bottom: 6px; }
+  .sub { color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+
+  label.field { display:block; font-weight:600; margin-bottom: 8px; font-size:1.05rem; }
+  input[type=text], textarea {
+    width: 100%; background: var(--bg); border: 2px solid var(--card-light);
+    border-radius: 16px; padding: 14px 16px; color: var(--ink);
+    font-family: inherit; font-size: 1.05rem; transition: border .2s;
+  }
+  input[type=text]:focus, textarea:focus { outline:none; border-color: var(--lav); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .quest-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+  .pick {
+    background: var(--card-light); border: 2px solid transparent; border-radius: 18px;
+    padding: 16px; cursor: pointer; transition: all .2s; text-align: center; font-weight: 500;
+  }
+  .pick:hover { transform: translateY(-3px); border-color: var(--lav); }
+  .pick .emoji { font-size: 1.8rem; display:block; margin-bottom: 6px; }
+
+  .btn {
+    background: linear-gradient(135deg, var(--pink), var(--lav));
+    color: #fff; border: none; border-radius: 18px; padding: 15px 28px;
+    font-family: inherit; font-size: 1.1rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255,107,179,0.35); transition: transform .15s, box-shadow .15s;
+    width: 100%;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(255,107,179,0.45); }
+  .btn:active { transform: translateY(1px); }
+  .btn.gold { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); box-shadow: 0 8px 20px rgba(240,165,0,0.35); color:#3a2e00; }
+  .btn.ghost { background: transparent; border: 2px solid var(--card-light); color: var(--muted); box-shadow:none; }
+  .btn.small { width:auto; padding: 10px 18px; font-size: .95rem; }
+
+  .row { display:flex; gap: 12px; margin-top: 18px; }
+
+  /* step builder */
+  .step-input-row { display:flex; gap:10px; margin-bottom: 14px; }
+  .step-input-row input { flex:1; }
+
+  .steps-list { list-style:none; }
+  .step-item {
+    background: var(--card-light); border-radius: 16px; padding: 14px 16px;
+    margin-bottom: 12px; display:flex; align-items:center; gap: 14px;
+    transition: all .3s; border: 2px solid transparent;
+  }
+  .step-item.done { border-color: var(--mint); background: rgba(95,227,192,0.12); }
+  .step-check {
+    width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--muted);
+    flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size: 1rem; transition: all .2s;
+  }
+  .step-item.done .step-check { background: var(--mint); border-color: var(--mint); color: var(--bg); }
+  .step-text { flex:1; font-size: 1.05rem; }
+  .step-item.done .step-text { text-decoration: line-through; color: var(--muted); }
+  .step-pts { color: var(--gold); font-weight:600; font-size:.9rem; white-space:nowrap; }
+
+  .empty-hint { color: var(--muted); text-align:center; padding: 20px; font-style:italic; }
+
+  /* progress */
+  .progress-wrap { margin: 20px 0; }
+  .progress-bar { height: 16px; background: var(--bg); border-radius: 10px; overflow:hidden; }
+  .progress-fill { height:100%; width:0%; background: linear-gradient(90deg, var(--mint), var(--sky)); border-radius:10px; transition: width .5s ease; }
+  .progress-label { text-align:center; margin-top:8px; color:var(--muted); font-weight:600; }
+
+  .quest-title-display {
+    font-family:'Caveat', cursive; font-size: 2rem; color: var(--gold);
+    text-align:center; margin-bottom: 4px;
+  }
+
+  /* toast / reward popup */
+  .toast {
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-120px);
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color:#3a2e00;
+    padding: 14px 26px; border-radius: 18px; font-weight:700; font-size:1.1rem;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3); z-index: 100; transition: transform .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* confetti */
+  .confetti { position: fixed; top:-10px; width:10px; height:14px; z-index:90; pointer-events:none; border-radius:2px; }
+
+  .badge-grid { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin: 20px 0; }
+  .badge {
+    width: 90px; text-align:center; opacity:0.3; transition: all .4s;
+  }
+  .badge.earned { opacity:1; transform: scale(1.05); }
+  .badge .circle {
+    width: 64px; height:64px; border-radius:50%; margin: 0 auto 6px;
+    display:flex; align-items:center; justify-content:center; font-size:1.8rem;
+    background: var(--card-light); border: 3px solid var(--card-light);
+  }
+  .badge.earned .circle { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); border-color: var(--gold); }
+  .badge .name { font-size:.78rem; color: var(--muted); }
+  .badge.earned .name { color: var(--ink); }
+
+  .celebrate { text-align:center; }
+  .celebrate .big-emoji { font-size: 4rem; animation: bounce 1s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
+
+  .mini-note { font-size:.85rem; color:var(--muted); margin-top:10px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="toast" id="toast">+10 ✨</div>
+
+<div class="wrap">
+  <header>
+    <h1>Quest Builder</h1>
+    <div class="tag">Turn a big scary task into a tiny doable adventure 🗺️</div>
+  </header>
+
+  <div class="hud">
+    <div class="chip"><span>⭐</span><span class="big" id="pointsDisplay">0</span><span>pts</span></div>
+    <div class="chip level-chip"><span>🏆</span><span>Lvl</span><span class="big" id="levelDisplay">1</span></div>
+  </div>
+
+  <!-- SCREEN 1: choose the quest -->
+  <div class="card screen active" id="screen-pick">
+    <h2>Pick your quest 🎯</h2>
+    <p class="sub">What's something that feels too big, boring, or hard to start? Choose one, or write your own.</p>
+    <div class="quest-picks" id="questPicks">
+      <div class="pick" data-q="Clean my room">
+        <span class="emoji">🧸</span>Clean my room
+      </div>
+      <div class="pick" data-q="Finish my homework">
+        <span class="emoji">📚</span>Finish my homework
+      </div>
+      <div class="pick" data-q="Get ready for bed">
+        <span class="emoji">🌙</span>Get ready for bed
+      </div>
+      <div class="pick" data-q="Study for a test">
+        <span class="emoji">✏️</span>Study for a test
+      </div>
+    </div>
+    <label class="field" for="customQuest">...or write your own quest:</label>
+    <input type="text" id="customQuest" placeholder="e.g. Make my project poster">
+    <button class="btn" style="margin-top:18px" onclick="goToBuild()">Start building →</button>
+  </div>
+
+  <!-- SCREEN 2: break it into steps -->
+  <div class="card screen" id="screen-build">
+    <div class="quest-title-display" id="buildQuestTitle">My Quest</div>
+    <p class="sub" style="text-align:center">Break it into the smallest steps you can. Tiny steps = easy XP. Aim for 3–6!</p>
+
+    <div class="step-input-row">
+      <input type="text" id="stepInput" placeholder="First tiny step..." onkeydown="if(event.key==='Enter')addStep()">
+      <button class="btn small gold" onclick="addStep()">Add</button>
+    </div>
+
+    <ul class="steps-list" id="buildSteps"></ul>
+    <div class="empty-hint" id="buildEmpty">No steps yet — what's the very first thing you'd do? Even "stand up" counts! 🐣</div>
+
+    <div class="row">
+      <button class="btn ghost" onclick="show('screen-pick')">← Back</button>
+      <button class="btn" onclick="startQuest()">Begin quest! 🚀</button>
+    </div>
+    <p class="mini-note">Tip: if a step feels hard, break it into two smaller ones.</p>
+  </div>
+
+  <!-- SCREEN 3: play / check off -->
+  <div class="card screen" id="screen-play">
+    <div class="quest-title-display" id="playQuestTitle">My Quest</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 of 0 done</div>
+    </div>
+    <ul class="steps-list" id="playSteps"></ul>
+    <button class="btn ghost" onclick="resetGame()" style="margin-top:10px">Start a new quest</button>
+    <p class="mini-note">Check off each step as you do it (or plan to). Every step earns XP! ⭐</p>
+  </div>
+
+  <!-- SCREEN 4: victory -->
+  <div class="card screen" id="screen-win">
+    <div class="celebrate">
+      <div class="big-emoji">🎉</div>
+      <h2 id="winTitle">Quest Complete!</h2>
+      <p class="sub" id="winMsg">You broke a big thing into small wins. That's a real skill!</p>
+    </div>
+    <div class="badge-grid" id="badgeGrid"></div>
+    <button class="btn gold" onclick="resetGame()">New quest →</button>
+  </div>
+</div>
+
+<script>
+  // ---- state ----
+  let state = {
+    quest: '',
+    steps: [],      // {text, done}
+    points: 0,
+    level: 1,
+  };
+
+  const POINTS_PER_STEP = 10;
+  const BONUS_COMPLETE = 30;
+
+  const badges = [
+    {id:'starter', icon:'🌱', name:'First Step', test:s=>s.steps.some(x=>x.done)},
+    {id:'breaker', icon:'🪓', name:'Big Breaker', test:s=>s.steps.length>=4},
+    {id:'finisher',icon:'🏁', name:'Finisher', test:s=>s.steps.length>0 && s.steps.every(x=>x.done)},
+    {id:'levelup', icon:'⚡', name:'Leveled Up', test:s=>s.level>=2},
+  ];
+
+  // ---- screen nav ----
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ---- screen 1: picking ----
+  document.querySelectorAll('#questPicks .pick').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      document.getElementById('customQuest').value = p.dataset.q;
+      document.querySelectorAll('.pick').forEach(x=>x.style.borderColor='transparent');
+      p.style.borderColor='var(--lav)';
+    });
+  });
+
+  function goToBuild(){
+    const q = document.getElementById('customQuest').value.trim();
+    if(!q){ alert('Pick a quest or write your own first! 🙂'); return; }
+    state.quest = q;
+    state.steps = [];
+    document.getElementById('buildQuestTitle').textContent = '🗺️ ' + q;
+    renderBuildSteps();
+    show('screen-build');
+  }
+
+  // ---- screen 2: building steps ----
+  function addStep(){
+    const inp = document.getElementById('stepInput');
+    const t = inp.value.trim();
+    if(!t) return;
+    state.steps.push({text:t, done:false});
+    inp.value=''; inp.focus();
+    renderBuildSteps();
+  }
+
+  function removeStep(i){
+    state.steps.splice(i,1);
+    renderBuildSteps();
+  }
+
+  function renderBuildSteps(){
+    const list = document.getElementById('buildSteps');
+    const empty = document.getElementById('buildEmpty');
+    list.innerHTML='';
+    empty.style.display = state.steps.length ? 'none':'block';
+    state.steps.forEach((s,i)=>{
+      const li = document.createElement('li');
+      li.className='step-item';
+      li.innerHTML = `<span class="step-text">${escapeHtml(s.text)}</span>
+        <span class="step-pts">+${POINTS_PER_STEP} XP</span>
+        <span class="step-check" onclick="removeStep(${i})" title="remove">✕</span>`;
+      list.appendChild(li);
+    });
+  }
+
+  function startQuest(){
+    if(state.steps.length===0){ alert('Add at least one tiny step to begin! 🐣'); return; }
+    document.getElementById('playQuestTitle').textContent = '🗺️ ' + state.quest;
+    renderPlaySteps();
+    show('screen-play');
+  }
+
+  // ---- screen 3: playing ----
+  function renderPlaySteps(){
+    const list = document.getElementById('playSteps');
+    list.innerHTML='';
+    state.steps.forEach((s,i)=>{
+      const li = document.createElement('li');
+      li.className='step-item' + (s.done?' done':'');
+      li.innerHTML = `<span class="step-check" onclick="toggleStep(${i})">${s.done?'✓':''}</span>
+        <span class="step-text">${escapeHtml(s.text)}</span>
+        <span class="step-pts">+${POINTS_PER_STEP}</span>`;
+      list.appendChild(li);
+    });
+    updateProgress();
+  }
+
+  function toggleStep(i){
+    const wasDone = state.steps[i].done;
+    state.steps[i].done = !wasDone;
+    if(!wasDone){
+      addPoints(POINTS_PER_STEP);
+      showToast('+'+POINTS_PER_STEP+' XP ⭐');
+    } else {
+      addPoints(-POINTS_PER_STEP);
+    }
+    renderPlaySteps();
+
+    if(state.steps.length && state.steps.every(x=>x.done)){
+      setTimeout(winQuest, 500);
+    }
+  }
+
+  function updateProgress(){
+    const done = state.steps.filter(s=>s.done).length;
+    const total = state.steps.length;
+    const pct = total? Math.round(done/total*100):0;
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressLabel').textContent = `${done} of ${total} done`;
+  }
+
+  // ---- points & level ----
+  function addPoints(n){
+    state.points = Math.max(0, state.points + n);
+    const newLevel = Math.floor(state.points/100)+1;
+    if(newLevel > state.level){
+      state.level = newLevel;
+      setTimeout(()=>showToast('LEVEL UP! Lvl '+newLevel+' 🏆'), 600);
+    } else {
+      state.level = newLevel;
+    }
+    document.getElementById('pointsDisplay').textContent = state.points;
+    document.getElementById('levelDisplay').textContent = state.level;
+  }
+
+  // ---- victory ----
+  function winQuest(){
+    addPoints(BONUS_COMPLETE);
+    document.getElementById('winMsg').textContent =
+      `You finished "${state.quest}" by breaking it into ${state.steps.length} small wins. +${BONUS_COMPLETE} bonus XP for finishing!`;
+    renderBadges();
+    fireConfetti();
+    show('screen-win');
+  }
+
+  function renderBadges(){
+    const grid = document.getElementById('badgeGrid');
+    grid.innerHTML='';
+    badges.forEach(b=>{
+      const earned = b.test(state);
+      const div = document.createElement('div');
+      div.className='badge' + (earned?' earned':'');
+      div.innerHTML = `<div class="circle">${b.icon}</div><div class="name">${b.name}</div>`;
+      grid.appendChild(div);
+    });
+  }
+
+  function resetGame(){
+    state.quest=''; state.steps=[];
+    document.getElementById('customQuest').value='';
+    document.querySelectorAll('.pick').forEach(x=>x.style.borderColor='transparent');
+    show('screen-pick');
+  }
+
+  // ---- effects ----
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 1600);
+  }
+
+  function fireConfetti(){
+    const colors=['#ffd166','#ff6bb3','#5fe3c0','#6bc6ff','#c08cff'];
+    for(let i=0;i<60;i++){
+      const c=document.createElement('div');
+      c.className='confetti';
+      c.style.left=Math.random()*100+'vw';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+      c.style.animation=`fall ${2+Math.random()*2}s linear forwards`;
+      c.style.transform=`rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(),4000);
+    }
+  }
+  const sheet=document.createElement('style');
+  sheet.textContent='@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:0;}}';
+  document.head.appendChild(sheet);
+
+  function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+  // build twinkly stars
+  (function(){
+    const box=document.getElementById('stars');
+    for(let i=0;i<28;i++){
+      const s=document.createElement('div');
+      s.className='star'; s.textContent='✦';
+      s.style.left=Math.random()*100+'%';
+      s.style.top=Math.random()*100+'%';
+      s.style.animationDelay=Math.random()*3+'s';
+      s.style.fontSize=(8+Math.random()*12)+'px';
+      box.appendChild(s);
+    }
+  })();
+</script>
+</body>
+</html>

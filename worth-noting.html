@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worth Noting</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* soft dawn palette — gentle, warm, non-clinical */
+    --bg: #1a1b2e;
+    --bg2: #232540;
+    --card: #2c2e4f;
+    --card-light: #383b62;
+    --ink: #f3f1fa;
+    --muted: #aeb0d4;
+    --gold: #f6cd72;
+    --gold-deep: #e3ad45;
+    --peach: #ffb39c;
+    --rose: #f593ab;
+    --lav: #b6a4f0;
+    --mint: #8fdcc4;
+    --sky: #88c0e8;
+    --shadow: rgba(8,8,22,0.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(182,164,240,0.16), transparent 45%),
+      radial-gradient(circle at 88% 16%, rgba(255,179,156,0.14), transparent 45%),
+      radial-gradient(circle at 50% 94%, rgba(143,220,196,0.10), transparent 50%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    color: var(--ink); min-height: 100vh; padding: 24px; overflow-x: hidden;
+  }
+  .glow { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .orb { position:absolute; border-radius:50%; filter:blur(2px); opacity:.25; animation:float 8s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0); opacity:.15;} 50%{transform:translateY(-12px); opacity:.35;} }
+
+  .wrap { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 {
+    font-size: 2.4rem; font-weight:700; letter-spacing:-0.5px;
+    background: linear-gradient(90deg, var(--peach), var(--gold), var(--lav));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .tag { color: var(--muted); margin-top: 4px; font-weight:400; }
+
+  .hud { display:flex; gap:12px; justify-content:center; margin:16px 0 22px; }
+  .chip { background:var(--card); border-radius:16px; padding:10px 18px; display:flex; align-items:center; gap:8px; box-shadow:0 6px 16px var(--shadow); font-weight:500; }
+  .chip .big { font-size:1.4rem; color:var(--gold); font-weight:700; }
+
+  .card { background:var(--card); border-radius:24px; padding:26px; box-shadow:0 16px 40px var(--shadow); border:1px solid rgba(255,255,255,0.05); }
+
+  h2 { font-size:1.3rem; margin-bottom:6px; text-align:center; font-weight:600; }
+  .sub { color:var(--muted); margin-bottom:18px; line-height:1.55; text-align:center; font-weight:400; }
+
+  .tabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  .tab {
+    background:var(--card-light); border:2px solid transparent; border-radius:12px;
+    padding:9px 16px; cursor:pointer; font-family:inherit; font-weight:500; color:var(--muted);
+    font-size:.92rem; transition:all .2s;
+  }
+  .tab:hover { transform:translateY(-2px); }
+  .tab.active { border-color:var(--lav); color:var(--ink); background:var(--card); }
+
+  .prompt-stage {
+    background:var(--card-light); border-radius:20px; padding:32px 26px; text-align:center;
+    min-height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+  }
+  .prompt-emoji { font-size:2.6rem; margin-bottom:14px; transition:transform .4s; }
+  .prompt-text {
+    font-family:'Caveat',cursive; font-size:2rem; line-height:1.3; color:var(--gold);
+    max-width:480px; transition:opacity .3s;
+  }
+  .prompt-stage.flip .prompt-text { opacity:0; }
+  .prompt-stage.flip .prompt-emoji { transform:scale(0.6) rotate(-12deg); }
+
+  .input-area { margin-top:18px; }
+  textarea {
+    width:100%; background:var(--bg); border:2px solid var(--card-light); border-radius:16px;
+    padding:14px 16px; color:var(--ink); font-family:inherit; font-size:1.02rem; resize:vertical;
+    min-height:80px; transition:border .2s;
+  }
+  textarea:focus { outline:none; border-color:var(--lav); }
+
+  .btn {
+    background:linear-gradient(135deg,var(--peach),var(--rose)); color:#3a1f29; border:none;
+    border-radius:16px; padding:14px 26px; font-family:inherit; font-size:1.02rem; font-weight:600;
+    cursor:pointer; box-shadow:0 8px 20px rgba(255,179,156,0.3); transition:transform .15s, box-shadow .15s; width:100%;
+  }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 12px 26px rgba(255,179,156,0.4); }
+  .btn:active { transform:translateY(1px); }
+  .btn.gold { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:#2a2008; box-shadow:0 8px 20px rgba(227,173,69,0.3); }
+  .btn.ghost { background:transparent; border:2px solid var(--card-light); color:var(--muted); box-shadow:none; }
+
+  .row { display:flex; gap:10px; margin-top:16px; }
+
+  /* collected jar */
+  .jar-section { margin-top:24px; }
+  .jar-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .jar-head h3 { font-size:1.05rem; font-weight:600; }
+  .jar-head span { color:var(--muted); font-size:.85rem; }
+  .jar { display:flex; flex-direction:column; gap:10px; max-height:260px; overflow-y:auto; padding-right:4px; }
+  .note {
+    background:var(--card-light); border-radius:14px; padding:14px 16px; font-size:.98rem;
+    line-height:1.45; border-left:4px solid var(--lav); animation:pop .4s ease;
+  }
+  .note .note-prompt { color:var(--muted); font-size:.8rem; margin-bottom:4px; }
+  @keyframes pop { from{opacity:0; transform:translateX(-10px);} to{opacity:1; transform:translateX(0);} }
+  .jar-empty { color:var(--muted); font-style:italic; text-align:center; padding:18px; font-size:.92rem; }
+
+  .toast {
+    position:fixed; top:30px; left:50%; transform:translateX(-50%) translateY(-120px);
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:#2a2008;
+    padding:14px 26px; border-radius:16px; font-weight:700; font-size:1.05rem;
+    box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:100; transition:transform .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  .mini-note { font-size:.84rem; color:var(--muted); margin-top:16px; text-align:center; line-height:1.5; font-weight:400; }
+</style>
+</head>
+<body>
+<div class="glow" id="glow"></div>
+<div class="toast" id="toast">Added 💛</div>
+
+<div class="wrap">
+  <header>
+    <h1>Worth Noting</h1>
+    <div class="tag">The things about you that have nothing to do with a mirror ✨</div>
+  </header>
+
+  <div class="hud">
+    <div class="chip"><span>💛</span><span class="big" id="countDisplay">0</span><span>noted</span></div>
+    <div class="chip"><span>🔥</span><span class="big" id="streakDisplay">0</span><span>in a row</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Pick a lens 🔍</h2>
+    <p class="sub">Each lens helps you notice something real about who you are — your strengths, what your body lets you do, the people and moments that matter. Draw a prompt, then jot a few words. Keep what you want.</p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-cat="strengths">💪 My Strengths</button>
+      <button class="tab" data-cat="body">🤸 What My Body Does</button>
+      <button class="tab" data-cat="gratitude">🌿 Grateful For</button>
+      <button class="tab" data-cat="proud">🏆 Proud Of</button>
+      <button class="tab" data-cat="kind">💗 Kind To Myself</button>
+    </div>
+
+    <div class="prompt-stage" id="promptStage">
+      <div class="prompt-emoji" id="promptEmoji">💪</div>
+      <div class="prompt-text" id="promptText">Tap "New prompt" to begin</div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="answerBox" placeholder="A few words is plenty — there's no right answer here..."></textarea>
+      <div class="row">
+        <button class="btn ghost" onclick="newPrompt()">↻ New prompt</button>
+        <button class="btn" onclick="saveNote()">Add to my jar 💛</button>
+      </div>
+    </div>
+
+    <div class="jar-section">
+      <div class="jar-head">
+        <h3>🫙 My jar</h3>
+        <span id="jarHint">things worth noting</span>
+      </div>
+      <div class="jar" id="jar">
+        <div class="jar-empty" id="jarEmpty">Your notes will collect here. Read back through them anytime you need a reminder. 🌟</div>
+      </div>
+    </div>
+
+    <p class="mini-note">There are no wrong answers, and nothing here is about how you look — it's about who you are and what you bring. Take your time. 💛</p>
+  </div>
+</div>
+
+<script>
+  const categories = {
+    strengths: {
+      emoji:'💪',
+      prompts:[
+        'What is something you are good at that has nothing to do with looks?',
+        'What is a strength a friend would say you have?',
+        'What is a problem you handled well recently?',
+        'What is a skill you are quietly proud of?',
+        'When have you been brave, even in a small way?',
+        'What can people count on you for?',
+        'What is something hard you have gotten through?',
+        'What is a way you have helped someone?',
+      ]
+    },
+    body: {
+      emoji:'🤸',
+      prompts:[
+        'What is something your body let you do today?',
+        'What is an activity your body helps you enjoy?',
+        'How did your body help you take care of yourself today?',
+        'What is something your hands made or did this week?',
+        'When did your body help you feel something good — music, food, a hug, fresh air?',
+        'What is a way your body keeps you going without you even asking?',
+        'What is something you can do now that your body learned over time?',
+        'How did your legs, voice, or breath help you today?',
+      ]
+    },
+    gratitude: {
+      emoji:'🌿',
+      prompts:[
+        'What is one small thing that went okay today?',
+        'Who is someone you are glad is in your life?',
+        'What is something that made you laugh recently?',
+        'What is a place that feels safe or comforting to you?',
+        'What is a tiny comfort you appreciate (a song, a snack, a cozy spot)?',
+        'What is something you are looking forward to?',
+        'What is a kindness someone showed you lately?',
+        'What is something in nature you noticed and liked?',
+      ]
+    },
+    proud: {
+      emoji:'🏆',
+      prompts:[
+        'What is something you did this week that took effort?',
+        'What is a moment you are proud of, big or small?',
+        'When did you keep going even when it was hard?',
+        'What is something you stuck with?',
+        'What is a choice you made that felt right?',
+        'When did you show up for someone, including yourself?',
+        'What is a fear you faced, even a little?',
+        'What is progress you have made that you do not give yourself credit for?',
+      ]
+    },
+    kind: {
+      emoji:'💗',
+      prompts:[
+        'What would you say to a friend who felt the way you do right now?',
+        'What is one gentle thing you could tell yourself today?',
+        'What do you need more of right now — rest, fun, support, space?',
+        'What is a way you could be a little kinder to yourself this week?',
+        'What is something you would forgive yourself for?',
+        'What is a need of yours that is valid, even if it feels hard to ask for?',
+        'If you treated yourself like someone you love, what would change today?',
+        'What is one true, kind sentence about who you are?',
+      ]
+    }
+  };
+
+  let currentCat = 'strengths';
+  let notes = []; // {cat, prompt, text}
+  let streak = 0;
+  let currentPrompt = '';
+
+  const stage = document.getElementById('promptStage');
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      currentCat = t.dataset.cat;
+      newPrompt();
+    });
+  });
+
+  function newPrompt(){
+    const cat = categories[currentCat];
+    const list = cat.prompts;
+    let p = list[Math.floor(Math.random()*list.length)];
+    // avoid repeating same prompt twice in a row
+    if(list.length>1){ while(p===currentPrompt){ p = list[Math.floor(Math.random()*list.length)]; } }
+    currentPrompt = p;
+    stage.classList.add('flip');
+    setTimeout(()=>{
+      document.getElementById('promptEmoji').textContent = cat.emoji;
+      document.getElementById('promptText').textContent = p;
+      stage.classList.remove('flip');
+    }, 300);
+  }
+
+  function saveNote(){
+    const box = document.getElementById('answerBox');
+    const text = box.value.trim();
+    if(!currentPrompt || currentPrompt==='Tap "New prompt" to begin'){ newPrompt(); return; }
+    if(!text){ box.focus(); box.style.borderColor='var(--peach)'; setTimeout(()=>box.style.borderColor='',1200); return; }
+    notes.unshift({cat:currentCat, prompt:currentPrompt, text:text});
+    streak += 1;
+    box.value='';
+    renderJar();
+    document.getElementById('countDisplay').textContent = notes.length;
+    document.getElementById('streakDisplay').textContent = streak;
+    showToast('Added to your jar 💛');
+    setTimeout(newPrompt, 400);
+  }
+
+  function renderJar(){
+    const jar = document.getElementById('jar');
+    const empty = document.getElementById('jarEmpty');
+    if(notes.length===0){ empty.style.display='block'; return; }
+    empty.style.display='none';
+    jar.innerHTML='';
+    notes.forEach(n=>{
+      const div = document.createElement('div');
+      div.className='note';
+      div.innerHTML = `<div class="note-prompt">${escapeHtml(n.prompt)}</div>${escapeHtml(n.text)}`;
+      jar.appendChild(div);
+    });
+  }
+
+  let toastTimer;
+  function showToast(msg){
+    const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1700);
+  }
+
+  function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+  // soft floating orbs
+  (function(){
+    const box=document.getElementById('glow');
+    const cols=['#b6a4f0','#ffb39c','#8fdcc4','#f593ab','#88c0e8'];
+    for(let i=0;i<8;i++){
+      const o=document.createElement('div'); o.className='orb';
+      const size=40+Math.random()*80;
+      o.style.width=size+'px'; o.style.height=size+'px';
+      o.style.left=Math.random()*100+'%'; o.style.top=Math.random()*100+'%';
+      o.style.background=cols[i%cols.length];
+      o.style.animationDelay=Math.random()*8+'s';
+      box.appendChild(o);
+    }
+  })();
+</script>
+</body>
+</html>

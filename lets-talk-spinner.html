@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Let's Talk Spinner</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1530;
+    --bg2: #251d45;
+    --card: #2e2456;
+    --card-light: #3a2e68;
+    --ink: #f4f0ff;
+    --muted: #b3a8d6;
+    --gold: #ffd166;
+    --gold-deep: #f0a500;
+    --pink: #ff6bb3;
+    --mint: #5fe3c0;
+    --sky: #6bc6ff;
+    --lav: #c08cff;
+    --shadow: rgba(10,5,30,0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Fredoka', sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(192,140,255,0.18), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(255,107,179,0.15), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(95,227,192,0.12), transparent 50%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    color: var(--ink); min-height: 100vh; padding: 24px; overflow-x: hidden;
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star { position:absolute; color:var(--gold); opacity:.5; animation:twinkle 3s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.2; transform:scale(.8);} 50%{opacity:.8; transform:scale(1.2);} }
+
+  .wrap { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 {
+    font-size: 2.6rem; font-weight:700;
+    background: linear-gradient(90deg, var(--pink), var(--lav), var(--sky));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .tag { color: var(--muted); margin-top: 2px; }
+
+  .hud { display:flex; gap:12px; justify-content:center; margin:14px 0 20px; }
+  .chip { background:var(--card); border-radius:18px; padding:10px 18px; display:flex; align-items:center; gap:8px; box-shadow:0 6px 16px var(--shadow); font-weight:600; }
+  .chip .big { font-size:1.4rem; color:var(--gold); }
+
+  .card { background:var(--card); border-radius:26px; padding:26px; box-shadow:0 16px 40px var(--shadow); border:1px solid rgba(255,255,255,0.06); }
+
+  h2 { font-size:1.4rem; margin-bottom:6px; text-align:center; }
+  .sub { color:var(--muted); margin-bottom:18px; line-height:1.5; text-align:center; }
+
+  .tabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  .tab {
+    background:var(--card-light); border:2px solid transparent; border-radius:14px;
+    padding:8px 16px; cursor:pointer; font-family:inherit; font-weight:500; color:var(--muted);
+    font-size:.95rem; transition:all .2s;
+  }
+  .tab:hover { transform:translateY(-2px); }
+  .tab.active { border-color:var(--lav); color:var(--ink); background:var(--card); }
+
+  .wheel-stage { position:relative; width:320px; height:320px; margin:10px auto 0; }
+  .pointer {
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent;
+    border-top:30px solid var(--gold); z-index:5; filter:drop-shadow(0 3px 4px rgba(0,0,0,.4));
+  }
+  .wheel {
+    width:320px; height:320px; border-radius:50%; position:relative;
+    transition: transform 4.5s cubic-bezier(.17,.67,.2,1);
+    box-shadow: 0 0 0 10px var(--card-light), 0 14px 40px var(--shadow);
+  }
+  .hub {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:54px; height:54px; border-radius:50%; z-index:4;
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+    display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.3); border:4px solid var(--card);
+  }
+
+  .btn {
+    background:linear-gradient(135deg,var(--pink),var(--lav)); color:#fff; border:none;
+    border-radius:18px; padding:15px 28px; font-family:inherit; font-size:1.1rem; font-weight:600;
+    cursor:pointer; box-shadow:0 8px 20px rgba(255,107,179,0.35); transition:transform .15s, box-shadow .15s; width:100%;
+  }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 12px 26px rgba(255,107,179,0.45); }
+  .btn:active { transform:translateY(1px); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .btn.gold { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:#3a2e00; box-shadow:0 8px 20px rgba(240,165,0,0.35); }
+  .btn.ghost { background:transparent; border:2px solid var(--card-light); color:var(--muted); box-shadow:none; }
+
+  .spin-area { text-align:center; margin-top:22px; }
+
+  .result {
+    margin-top:20px; background:var(--card-light); border-radius:20px; padding:24px;
+    text-align:center; opacity:0; max-height:0; overflow:hidden; transition:all .5s ease;
+  }
+  .result.show { opacity:1; max-height:420px; padding:24px; }
+  .result .emoji { font-size:2.6rem; display:block; margin-bottom:10px; }
+  .result .question { font-family:'Caveat',cursive; font-size:2rem; color:var(--gold); line-height:1.25; margin-bottom:18px; }
+  .result .actions { display:flex; gap:10px; }
+  .result .actions .btn { font-size:1rem; padding:12px 18px; }
+
+  .toast {
+    position:fixed; top:30px; left:50%; transform:translateX(-50%) translateY(-120px);
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:#3a2e00;
+    padding:14px 26px; border-radius:18px; font-weight:700; font-size:1.1rem;
+    box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:100; transition:transform .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .confetti { position:fixed; top:-10px; width:10px; height:14px; z-index:90; pointer-events:none; border-radius:2px; }
+
+  .mini-note { font-size:.85rem; color:var(--muted); margin-top:14px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="toast" id="toast">Nice share! ✨</div>
+
+<div class="wrap">
+  <header>
+    <h1>Let's Talk Spinner</h1>
+    <div class="tag">Give it a spin and answer whatever it lands on 💬</div>
+  </header>
+
+  <div class="hud">
+    <div class="chip"><span>💬</span><span class="big" id="answeredDisplay">0</span><span>answered</span></div>
+    <div class="chip"><span>⭐</span><span class="big" id="pointsDisplay">0</span><span>pts</span></div>
+  </div>
+
+  <div class="card">
+    <h2>What kind of questions? 🎡</h2>
+    <p class="sub">Pick a vibe, spin the wheel, and share your answer. There are no wrong answers here!</p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-cat="easy">😊 Easy Start</button>
+      <button class="tab" data-cat="favorites">⭐ Favorites</button>
+      <button class="tab" data-cat="imagine">✨ Imagine</button>
+      <button class="tab" data-cat="deeper">💛 A Bit Deeper</button>
+      <button class="tab" data-cat="silly">😜 Silly</button>
+    </div>
+
+    <div class="wheel-stage">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel"></div>
+      <div class="hub">🎡</div>
+    </div>
+
+    <div class="spin-area">
+      <button class="btn gold" id="spinBtn" onclick="spin()">SPIN! 🎯</button>
+    </div>
+
+    <div class="result" id="result">
+      <span class="emoji" id="rEmoji">💬</span>
+      <div class="question" id="rQuestion"></div>
+      <div class="actions">
+        <button class="btn ghost" onclick="reSpin()">↻ New question</button>
+        <button class="btn" onclick="answered()">We talked about it! ✓</button>
+      </div>
+    </div>
+
+    <p class="mini-note">Take turns! Whoever spins answers first — then the other person shares too. 💛</p>
+  </div>
+</div>
+
+<script>
+  const categories = {
+    easy: {
+      color1:'#5fe3c0', color2:'#6bc6ff',
+      items:[
+        {q:'What did you have for breakfast today?', e:'🥞'},
+        {q:'What is your favorite color and why?', e:'🎨'},
+        {q:'Do you have any pets? If you could, what pet would you want?', e:'🐶'},
+        {q:'What is your favorite snack?', e:'🍿'},
+        {q:'What season do you like best?', e:'🍂'},
+        {q:'What is something you did this week that was fun?', e:'🎈'},
+        {q:'What is your favorite day of the week?', e:'📅'},
+        {q:'What song have you been into lately?', e:'🎵'},
+      ]
+    },
+    favorites: {
+      color1:'#ffd166', color2:'#f0a500',
+      items:[
+        {q:'What is your favorite place in the whole world?', e:'🌍'},
+        {q:'What is your favorite movie or show right now?', e:'🍿'},
+        {q:'What is the best meal you have ever had?', e:'🍝'},
+        {q:'Who is your favorite person to spend time with?', e:'💕'},
+        {q:'What is your favorite thing to do on a weekend?', e:'🛹'},
+        {q:'What is the best gift you have ever gotten?', e:'🎁'},
+        {q:'What is your favorite memory from this year?', e:'📸'},
+        {q:'What is a book or story you love?', e:'📖'},
+      ]
+    },
+    imagine: {
+      color1:'#c08cff', color2:'#ff6bb3',
+      items:[
+        {q:'If you could have any superpower, what would it be?', e:'🦸'},
+        {q:'If you could travel anywhere tomorrow, where would you go?', e:'✈️'},
+        {q:'If you could be any animal for a day, which one?', e:'🦋'},
+        {q:'If you won a million dollars, what is the first thing you would do?', e:'💰'},
+        {q:'If you could meet anyone, real or made-up, who would it be?', e:'🌟'},
+        {q:'If you could invent anything, what would you make?', e:'💡'},
+        {q:'If you could live in any movie or book world, which one?', e:'🏰'},
+        {q:'What would your dream room look like?', e:'🛏️'},
+      ]
+    },
+    deeper: {
+      color1:'#ff6bb3', color2:'#c08cff',
+      items:[
+        {q:'What is something you are really good at?', e:'💪'},
+        {q:'What makes you feel calm or happy?', e:'😌'},
+        {q:'Who is someone you look up to, and why?', e:'🌟'},
+        {q:'What is something you are proud of?', e:'🏆'},
+        {q:'What is something you wish more people knew about you?', e:'💭'},
+        {q:'When you are having a hard day, what helps?', e:'🤍'},
+        {q:'What is something you are looking forward to?', e:'🌅'},
+        {q:'What is one word that describes you really well?', e:'✨'},
+      ]
+    },
+    silly: {
+      color1:'#6bc6ff', color2:'#5fe3c0',
+      items:[
+        {q:'If you were an ice cream flavor, what would you be?', e:'🍦'},
+        {q:'What is the silliest thing that made you laugh recently?', e:'😂'},
+        {q:'Would you rather have spaghetti hair or cheese feet?', e:'🍝'},
+        {q:'If your pet (or dream pet) could talk, what would it say?', e:'🐱'},
+        {q:'What is the weirdest food combo you secretly like?', e:'🥨'},
+        {q:'If you could rename yourself anything, what would you pick?', e:'🏷️'},
+        {q:'What would be the worst superpower to have?', e:'🦸'},
+        {q:'If you ruled the world for one day, what is one silly rule you would make?', e:'👑'},
+      ]
+    }
+  };
+
+  let currentCat = 'easy';
+  let points = 0, answeredCount = 0, spinning = false, rotation = 0;
+
+  const wheel = document.getElementById('wheel');
+
+  function buildWheel(){
+    const items = categories[currentCat].items;
+    const n = items.length;
+    const seg = 360/n;
+    const c1 = categories[currentCat].color1;
+    const c2 = categories[currentCat].color2;
+    let stops = [];
+    for(let i=0;i<n;i++){
+      const col = i%2===0 ? c1 : c2;
+      stops.push(`${col} ${i*seg}deg ${(i+1)*seg}deg`);
+    }
+    wheel.style.background = `conic-gradient(${stops.join(',')})`;
+    wheel.querySelectorAll('.seg-label').forEach(e=>e.remove());
+    for(let i=0;i<n;i++){
+      const lbl = document.createElement('div');
+      lbl.className='seg-label';
+      lbl.textContent = items[i].e;
+      const angle = i*seg + seg/2;
+      lbl.style.cssText = `position:absolute; top:50%; left:50%; font-size:1.5rem;
+        transform: rotate(${angle}deg) translateY(-118px); transform-origin: center;`;
+      wheel.appendChild(lbl);
+    }
+  }
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      if(spinning) return;
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      currentCat = t.dataset.cat;
+      hideResult();
+      buildWheel();
+    });
+  });
+
+  function spin(){
+    if(spinning) return;
+    spinning = true;
+    hideResult();
+    document.getElementById('spinBtn').disabled = true;
+
+    const items = categories[currentCat].items;
+    const n = items.length;
+    const seg = 360/n;
+    const pick = Math.floor(Math.random()*n);
+    const targetAngle = 360 - (pick*seg + seg/2);
+    const spins = 5;
+    rotation += spins*360 + (targetAngle - (rotation % 360));
+    wheel.style.transform = `rotate(${rotation}deg)`;
+
+    setTimeout(()=>{
+      showResult(items[pick]);
+      spinning = false;
+      document.getElementById('spinBtn').disabled = false;
+    }, 4600);
+  }
+
+  function showResult(r){
+    document.getElementById('rEmoji').textContent = r.e;
+    document.getElementById('rQuestion').textContent = r.q;
+    document.getElementById('result').classList.add('show');
+    document.getElementById('spinBtn').textContent = 'Spin again 🎯';
+  }
+  function hideResult(){ document.getElementById('result').classList.remove('show'); }
+  function reSpin(){ hideResult(); setTimeout(spin, 300); }
+
+  function answered(){
+    points += 10; answeredCount += 1;
+    document.getElementById('pointsDisplay').textContent = points;
+    document.getElementById('answeredDisplay').textContent = answeredCount;
+    showToast('Great share! +10 ⭐');
+    fireConfetti();
+    hideResult();
+    document.getElementById('spinBtn').textContent = 'SPIN! 🎯';
+  }
+
+  let toastTimer;
+  function showToast(msg){
+    const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1700);
+  }
+  function fireConfetti(){
+    const colors=['#ffd166','#ff6bb3','#5fe3c0','#6bc6ff','#c08cff'];
+    for(let i=0;i<55;i++){
+      const c=document.createElement('div'); c.className='confetti';
+      c.style.left=Math.random()*100+'vw';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+      c.style.animation=`fall ${2+Math.random()*2}s linear forwards`;
+      c.style.transform=`rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(c); setTimeout(()=>c.remove(),4000);
+    }
+  }
+  const sheet=document.createElement('style');
+  sheet.textContent='@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:0;}}';
+  document.head.appendChild(sheet);
+
+  (function(){
+    const box=document.getElementById('stars');
+    for(let i=0;i<26;i++){
+      const s=document.createElement('div'); s.className='star'; s.textContent='✦';
+      s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+      s.style.animationDelay=Math.random()*3+'s'; s.style.fontSize=(8+Math.random()*12)+'px';
+      box.appendChild(s);
+    }
+  })();
+
+  buildWheel();
+</script>
+</body>
+</html>

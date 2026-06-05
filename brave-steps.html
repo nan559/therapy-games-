@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brave Steps</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* fresh coastal palette — soft greens, ocean blue, warm sand */
+    --bg: #0f2027;
+    --bg2: #143540;
+    --card: #1b4450;
+    --card-light: #245565;
+    --ink: #f0f7f5;
+    --muted: #9fc4c4;
+    --sand: #f5d99b;
+    --sand-deep: #e6bf6f;
+    --coral: #ff9b85;
+    --teal: #56cfc0;
+    --leaf: #8fd99a;
+    --sky: #6fc3e8;
+    --shadow: rgba(3,15,18,0.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background:
+      radial-gradient(circle at 14% 8%, rgba(86,207,192,0.16), transparent 45%),
+      radial-gradient(circle at 86% 16%, rgba(111,195,232,0.14), transparent 45%),
+      radial-gradient(circle at 50% 95%, rgba(143,217,154,0.10), transparent 50%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    color: var(--ink); min-height: 100vh; padding: 24px; overflow-x: hidden;
+  }
+  .waves { position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5; }
+  .bubble { position:absolute; border-radius:50%; background:var(--teal); opacity:.2; animation:rise 9s ease-in infinite; }
+  @keyframes rise { 0%{transform:translateY(20px); opacity:0;} 30%{opacity:.3;} 100%{transform:translateY(-90px); opacity:0;} }
+
+  .wrap { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+  header { text-align: center; margin-bottom: 16px; }
+  h1 {
+    font-size: 2.5rem; font-weight:700; letter-spacing:-0.5px;
+    background: linear-gradient(90deg, var(--teal), var(--sky), var(--leaf));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .tag { color: var(--muted); margin-top: 4px; font-weight:500; }
+
+  .card { background:var(--card); border-radius:24px; padding:26px; box-shadow:0 16px 40px var(--shadow); border:1px solid rgba(255,255,255,0.05); }
+
+  /* mode picker */
+  .modes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:4px; }
+  .mode-btn {
+    background:var(--card-light); border:2px solid transparent; border-radius:18px;
+    padding:18px 10px; cursor:pointer; font-family:inherit; text-align:center; transition:all .2s; color:var(--ink);
+  }
+  .mode-btn:hover { transform:translateY(-3px); border-color:var(--teal); }
+  .mode-btn.active { border-color:var(--teal); background:var(--card); }
+  .mode-btn .m-emoji { font-size:1.8rem; display:block; margin-bottom:6px; }
+  .mode-btn .m-name { font-weight:600; font-size:.95rem; }
+  .mode-btn .m-desc { font-size:.75rem; color:var(--muted); margin-top:2px; }
+
+  h2 { font-size:1.3rem; margin-bottom:6px; text-align:center; font-weight:600; }
+  .sub { color:var(--muted); margin-bottom:18px; line-height:1.55; text-align:center; font-weight:500; }
+
+  .panel { display:none; animation:fade .4s ease; margin-top:22px; }
+  .panel.active { display:block; }
+  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .btn {
+    background:linear-gradient(135deg,var(--teal),var(--sky)); color:#06343a; border:none;
+    border-radius:16px; padding:14px 26px; font-family:inherit; font-size:1.02rem; font-weight:700;
+    cursor:pointer; box-shadow:0 8px 20px rgba(86,207,192,0.3); transition:transform .15s, box-shadow .15s; width:100%;
+  }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 12px 26px rgba(86,207,192,0.4); }
+  .btn:active { transform:translateY(1px); }
+  .btn.sand { background:linear-gradient(135deg,var(--sand),var(--sand-deep)); color:#3a2c08; box-shadow:0 8px 20px rgba(230,191,111,0.3); }
+  .btn.ghost { background:transparent; border:2px solid var(--card-light); color:var(--muted); box-shadow:none; }
+  .row { display:flex; gap:10px; margin-top:16px; }
+
+  /* ---- CALM: breathing ---- */
+  .breath-stage { text-align:center; padding:10px 0; }
+  .breath-circle {
+    width:170px; height:170px; border-radius:50%; margin:14px auto;
+    background:radial-gradient(circle at 35% 35%, var(--teal), var(--sky));
+    display:flex; align-items:center; justify-content:center; color:#06343a; font-weight:700; font-size:1.15rem;
+    box-shadow:0 0 50px rgba(86,207,192,0.4); transition:transform 4s ease-in-out;
+  }
+  .breath-circle.inhale { transform:scale(1.35); }
+  .breath-circle.exhale { transform:scale(0.85); }
+  .breath-word { font-size:1.2rem; font-weight:600; min-height:1.5em; color:var(--teal); }
+  .ground-list { list-style:none; text-align:left; max-width:420px; margin:0 auto; }
+  .ground-list li { background:var(--card-light); border-radius:14px; padding:14px 16px; margin-bottom:10px; font-weight:500; display:flex; gap:12px; align-items:center; }
+  .ground-list li .n { background:var(--teal); color:#06343a; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+
+  /* ---- PRACTICE: scenarios ---- */
+  .scenario {
+    background:var(--card-light); border-radius:18px; padding:22px; text-align:center; margin-bottom:16px;
+  }
+  .scenario .s-emoji { font-size:2.4rem; display:block; margin-bottom:10px; }
+  .scenario .s-text { font-family:'Caveat',cursive; font-size:1.8rem; color:var(--sand); line-height:1.3; }
+  .choices { display:flex; flex-direction:column; gap:10px; }
+  .choice {
+    background:var(--card-light); border:2px solid transparent; border-radius:14px; padding:14px 16px;
+    cursor:pointer; font-family:inherit; font-size:1rem; color:var(--ink); text-align:left; transition:all .2s; font-weight:500;
+  }
+  .choice:hover { border-color:var(--sky); transform:translateX(3px); }
+  .choice.picked { border-color:var(--teal); background:rgba(86,207,192,0.12); }
+  .feedback {
+    margin-top:14px; background:rgba(143,217,154,0.12); border-left:4px solid var(--leaf);
+    border-radius:12px; padding:14px 16px; font-size:.96rem; line-height:1.5; display:none;
+  }
+  .feedback.show { display:block; animation:fade .3s ease; }
+
+  /* ---- PREP: confidence ---- */
+  .prep-card {
+    background:var(--card-light); border-radius:18px; padding:24px; text-align:center; min-height:150px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .prep-emoji { font-size:2.4rem; margin-bottom:12px; }
+  .prep-text { font-family:'Caveat',cursive; font-size:1.85rem; color:var(--sand); line-height:1.3; max-width:460px; }
+
+  .toast {
+    position:fixed; top:30px; left:50%; transform:translateX(-50%) translateY(-120px);
+    background:linear-gradient(135deg,var(--sand),var(--sand-deep)); color:#3a2c08;
+    padding:14px 26px; border-radius:16px; font-weight:700; font-size:1.05rem;
+    box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:100; transition:transform .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  .mini-note { font-size:.84rem; color:var(--muted); margin-top:16px; text-align:center; line-height:1.5; font-weight:500; }
+</style>
+</head>
+<body>
+<div class="waves" id="waves"></div>
+<div class="toast" id="toast">You did it 🌟</div>
+
+<div class="wrap">
+  <header>
+    <h1>Brave Steps</h1>
+    <div class="tag">Three ways to feel calmer and braver before, during, or after 🌊</div>
+  </header>
+
+  <div class="card">
+    <div class="modes">
+      <div class="mode-btn active" data-mode="calm" onclick="setMode('calm')">
+        <span class="m-emoji">🌊</span><span class="m-name">Calm Me</span>
+        <div class="m-desc">right now</div>
+      </div>
+      <div class="mode-btn" data-mode="practice" onclick="setMode('practice')">
+        <span class="m-emoji">🎭</span><span class="m-name">Practice</span>
+        <div class="m-desc">what would I do?</div>
+      </div>
+      <div class="mode-btn" data-mode="prep" onclick="setMode('prep')">
+        <span class="m-emoji">⭐</span><span class="m-name">Pep Talk</span>
+        <div class="m-desc">before I go</div>
+      </div>
+    </div>
+
+    <!-- CALM -->
+    <div class="panel active" id="panel-calm">
+      <h2>Let's settle your body first 🌊</h2>
+      <p class="sub">When we feel nervous, our body speeds up. Slow breathing tells it "we're okay." Follow the circle.</p>
+      <div class="breath-stage">
+        <div class="breath-circle" id="breathCircle">Ready?</div>
+        <div class="breath-word" id="breathWord"></div>
+      </div>
+      <button class="btn" id="breathBtn" onclick="toggleBreath()">Start breathing 🫧</button>
+
+      <p class="sub" style="margin-top:24px; margin-bottom:10px;">Still buzzy? Try grounding — find these around you:</p>
+      <ul class="ground-list">
+        <li><span class="n">5</span> things you can <b>see</b></li>
+        <li><span class="n">4</span> things you can <b>touch</b></li>
+        <li><span class="n">3</span> things you can <b>hear</b></li>
+        <li><span class="n">2</span> things you can <b>smell</b></li>
+        <li><span class="n">1</span> thing you can <b>taste</b> (or one slow breath)</li>
+      </ul>
+    </div>
+
+    <!-- PRACTICE -->
+    <div class="panel" id="panel-practice">
+      <h2>What would you do? 🎭</h2>
+      <p class="sub">There's no perfect answer — practicing in your head makes the real thing feel easier. Pick what feels most like you.</p>
+      <div class="scenario">
+        <span class="s-emoji" id="scEmoji">🏫</span>
+        <div class="s-text" id="scText"></div>
+      </div>
+      <div class="choices" id="scChoices"></div>
+      <div class="feedback" id="scFeedback"></div>
+      <button class="btn sand" onclick="nextScenario()" style="margin-top:16px;">Another scenario →</button>
+    </div>
+
+    <!-- PREP -->
+    <div class="panel" id="panel-prep">
+      <h2>A little pep talk before you go ⭐</h2>
+      <p class="sub">Tap for a reminder to take with you. These are true even when your nervous brain says otherwise.</p>
+      <div class="prep-card">
+        <div class="prep-emoji" id="prepEmoji">💛</div>
+        <div class="prep-text" id="prepText">Tap below for your reminder</div>
+      </div>
+      <button class="btn" onclick="newPrep()" style="margin-top:16px;">Give me a reminder ✨</button>
+      <p class="mini-note">Pick your favorite and say it to yourself on the way in. 🌟</p>
+    </div>
+
+    <p class="mini-note" id="globalNote">Tip: start with Calm Me if your body feels jittery, then move to Practice or Pep Talk.</p>
+  </div>
+</div>
+
+<script>
+  /* ---------- MODE SWITCHING ---------- */
+  function setMode(m){
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+m).classList.add('active');
+    if(m==='practice' && !document.getElementById('scText').textContent) nextScenario();
+    if(m!=='calm') stopBreath();
+  }
+
+  /* ---------- CALM: breathing ---------- */
+  let breathing=false, breathTimer=null;
+  const circle=document.getElementById('breathCircle');
+  const word=document.getElementById('breathWord');
+
+  function toggleBreath(){ breathing ? stopBreath() : startBreath(); }
+  function startBreath(){
+    breathing=true;
+    document.getElementById('breathBtn').textContent='Stop 🛑';
+    runBreathCycle();
+  }
+  function stopBreath(){
+    breathing=false; clearTimeout(breathTimer);
+    circle.className='breath-circle'; circle.textContent='Ready?';
+    word.textContent='';
+    const b=document.getElementById('breathBtn'); if(b) b.textContent='Start breathing 🫧';
+  }
+  function runBreathCycle(){
+    if(!breathing) return;
+    // inhale 4s
+    circle.className='breath-circle inhale'; circle.textContent='Breathe in'; word.textContent='in... 2... 3... 4';
+    breathTimer=setTimeout(()=>{
+      if(!breathing) return;
+      // hold 2s (visual stays)
+      circle.textContent='Hold'; word.textContent='hold... 2';
+      breathTimer=setTimeout(()=>{
+        if(!breathing) return;
+        // exhale 4s
+        circle.className='breath-circle exhale'; circle.textContent='Breathe out'; word.textContent='out... 2... 3... 4';
+        breathTimer=setTimeout(()=>{ if(breathing) runBreathCycle(); }, 4000);
+      }, 2000);
+    }, 4000);
+  }
+
+  /* ---------- PRACTICE: scenarios ---------- */
+  const scenarios = [
+    {
+      emoji:'🏫', text:'You walk into class and the only open seat is next to someone you don\'t know well.',
+      choices:[
+        {t:'Sit down and give a small smile or "hi"', good:true},
+        {t:'Sit down and just focus on getting your stuff out', good:true},
+        {t:'Stand frozen in the doorway hoping no one notices', good:false},
+      ],
+      fb:{
+        good:'Either of those works great! A tiny smile OR just quietly settling in are both totally okay. You don\'t owe anyone a big conversation — just being there is brave.',
+        bad:'Freezing is what anxiety wants you to do, and it usually feels worse. The good news: you have easier options, like a small smile or just sitting and unpacking your bag. Both are enough.'
+      }
+    },
+    {
+      emoji:'🎉', text:'You\'re invited to a birthday party where you\'ll only know one or two people.',
+      choices:[
+        {t:'Go, and plan to stick near the person you know at first', good:true},
+        {t:'Go, and decide you can leave early if it\'s too much', good:true},
+        {t:'Cancel last minute because it feels scary', good:false},
+      ],
+      fb:{
+        good:'Smart plan! Having a "safe person" to start near or an exit plan makes new situations way more doable. You can be nervous AND still go.',
+        bad:'Totally understandable urge — but canceling usually makes the fear bigger next time. A gentler move: go with a plan, like sticking near someone you know or letting yourself leave early.'
+      }
+    },
+    {
+      emoji:'🙋', text:'Your teacher asks a question and you think you know the answer, but your heart starts racing.',
+      choices:[
+        {t:'Take one slow breath and raise your hand anyway', good:true},
+        {t:'Write your answer down even if you don\'t say it', good:true},
+        {t:'Decide you\'re definitely wrong so you don\'t have to try', good:false},
+      ],
+      fb:{
+        good:'Love it. A breath first calms the racing, and even writing it down counts as a win. Brave doesn\'t mean unafraid — it means doing it scared.',
+        bad:'That\'s your anxiety talking you out of it, not the truth. Try a smaller brave step instead: one slow breath, then either raise your hand OR just jot your answer down for yourself.'
+      }
+    },
+    {
+      emoji:'🍽️', text:'At lunch, the group you usually sit with is full and you have to find another spot.',
+      choices:[
+        {t:'Ask a friendly-looking table "is it okay if I sit here?"', good:true},
+        {t:'Sit at a quieter spot and text or read for a bit', good:true},
+        {t:'Skip lunch and hide in the bathroom', good:false},
+      ],
+      fb:{
+        good:'Both are great. Asking takes guts, and choosing a calmer spot is a totally valid choice too — not every day has to be social.',
+        bad:'Hiding skips the hard feeling now but tends to make lunchtime scarier over time (and you miss eating!). Kinder options: ask to join a table, or pick a quieter spot to settle.'
+      }
+    },
+    {
+      emoji:'📞', text:'You need to call to order food or ask a question, but talking on the phone makes you nervous.',
+      choices:[
+        {t:'Write down what you\'ll say first, then call', good:true},
+        {t:'Practice it once out loud before dialing', good:true},
+        {t:'Avoid it and hope someone else does it', good:false},
+      ],
+      fb:{
+        good:'Yes! Prepping what to say takes most of the scary out of it. Phone nerves are super common — a little script is a pro move.',
+        bad:'Avoiding feels easier for a second but keeps the fear strong. A tiny prep step — writing or practicing what you\'ll say — makes the call much less scary.'
+      }
+    }
+  ];
+  let scIndex=-1;
+  function nextScenario(){
+    let i; do { i=Math.floor(Math.random()*scenarios.length); } while(i===scIndex && scenarios.length>1);
+    scIndex=i;
+    const s=scenarios[i];
+    document.getElementById('scEmoji').textContent=s.emoji;
+    document.getElementById('scText').textContent=s.text;
+    document.getElementById('scFeedback').classList.remove('show');
+    const box=document.getElementById('scChoices'); box.innerHTML='';
+    s.choices.forEach(c=>{
+      const div=document.createElement('div'); div.className='choice'; div.textContent=c.t;
+      div.onclick=()=>pickChoice(div, c.good, s);
+      box.appendChild(div);
+    });
+  }
+  function pickChoice(el, good, s){
+    document.querySelectorAll('#scChoices .choice').forEach(c=>c.classList.remove('picked'));
+    el.classList.add('picked');
+    const fb=document.getElementById('scFeedback');
+    fb.textContent = good ? s.fb.good : s.fb.bad;
+    fb.classList.add('show');
+    if(good) showToast('Nice choice 🌟');
+  }
+
+  /* ---------- PREP: pep talk ---------- */
+  const peps = [
+    {e:'💛', t:'Feeling nervous doesn\'t mean something is wrong. It just means you care.'},
+    {e:'🐢', t:'You can go slow. One small brave step counts just as much as a big one.'},
+    {e:'🌱', t:'You don\'t have to be the most talkative person there. You just have to be there.'},
+    {e:'🌊', t:'This nervous feeling will pass — it always peaks and then comes back down.'},
+    {e:'🛟', t:'You\'re allowed to take breaks. Stepping away for a minute is smart, not weak.'},
+    {e:'🦋', t:'Most people are thinking about themselves, not watching you. You\'re freer than it feels.'},
+    {e:'⭐', t:'You\'ve done hard things before. You can borrow that bravery for today.'},
+    {e:'🎈', t:'You don\'t have to say the perfect thing. "Hi" is more than enough.'},
+    {e:'🌤️', t:'Brave isn\'t feeling no fear — it\'s doing the thing while a little scared.'},
+    {e:'🤝', t:'One friendly face is all you need to find. You don\'t have to win over the room.'},
+  ];
+  let pepIndex=-1;
+  function newPrep(){
+    let i; do { i=Math.floor(Math.random()*peps.length); } while(i===pepIndex && peps.length>1);
+    pepIndex=i;
+    document.getElementById('prepEmoji').textContent=peps[i].e;
+    document.getElementById('prepText').textContent=peps[i].t;
+  }
+
+  /* ---------- effects ---------- */
+  let toastTimer;
+  function showToast(msg){
+    const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1600);
+  }
+  (function(){
+    const box=document.getElementById('waves');
+    for(let i=0;i<12;i++){
+      const b=document.createElement('div'); b.className='bubble';
+      const size=10+Math.random()*30;
+      b.style.width=size+'px'; b.style.height=size+'px';
+      b.style.left=Math.random()*100+'%'; b.style.top=(60+Math.random()*40)+'%';
+      b.style.animationDelay=Math.random()*9+'s';
+      box.appendChild(b);
+    }
+  })();
+</script>
+</body>
+</html>
