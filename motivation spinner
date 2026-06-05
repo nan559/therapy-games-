@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motivation Spinner</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1530;
+    --bg2: #251d45;
+    --card: #2e2456;
+    --card-light: #3a2e68;
+    --ink: #f4f0ff;
+    --muted: #b3a8d6;
+    --gold: #ffd166;
+    --gold-deep: #f0a500;
+    --pink: #ff6bb3;
+    --mint: #5fe3c0;
+    --sky: #6bc6ff;
+    --lav: #c08cff;
+    --shadow: rgba(10,5,30,0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Fredoka', sans-serif;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(192,140,255,0.18), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(255,107,179,0.15), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(95,227,192,0.12), transparent 50%),
+      linear-gradient(160deg, var(--bg), var(--bg2));
+    color: var(--ink); min-height: 100vh; padding: 24px; overflow-x: hidden;
+  }
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star { position:absolute; color:var(--gold); opacity:.5; animation:twinkle 3s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.2; transform:scale(.8);} 50%{opacity:.8; transform:scale(1.2);} }
+
+  .wrap { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 {
+    font-size: 2.6rem; font-weight:700;
+    background: linear-gradient(90deg, var(--sky), var(--mint), var(--gold));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .tag { color: var(--muted); margin-top: 2px; }
+
+  .hud { display:flex; gap:12px; justify-content:center; margin:14px 0 20px; }
+  .chip { background:var(--card); border-radius:18px; padding:10px 18px; display:flex; align-items:center; gap:8px; box-shadow:0 6px 16px var(--shadow); font-weight:600; }
+  .chip .big { font-size:1.4rem; color:var(--gold); }
+
+  .card { background:var(--card); border-radius:26px; padding:26px; box-shadow:0 16px 40px var(--shadow); border:1px solid rgba(255,255,255,0.06); }
+
+  .screen { display:none; animation:fade .4s ease; }
+  .screen.active { display:block; }
+  @keyframes fade { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  h2 { font-size:1.4rem; margin-bottom:6px; text-align:center; }
+  .sub { color:var(--muted); margin-bottom:18px; line-height:1.5; text-align:center; }
+
+  /* category tabs */
+  .tabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  .tab {
+    background:var(--card-light); border:2px solid transparent; border-radius:14px;
+    padding:8px 16px; cursor:pointer; font-family:inherit; font-weight:500; color:var(--muted);
+    font-size:.95rem; transition:all .2s;
+  }
+  .tab:hover { transform:translateY(-2px); }
+  .tab.active { border-color:var(--lav); color:var(--ink); background:var(--card); }
+
+  /* wheel */
+  .wheel-stage { position:relative; width:320px; height:320px; margin:10px auto 0; }
+  .pointer {
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent;
+    border-top:30px solid var(--gold); z-index:5; filter:drop-shadow(0 3px 4px rgba(0,0,0,.4));
+  }
+  .wheel {
+    width:320px; height:320px; border-radius:50%; position:relative;
+    transition: transform 4.5s cubic-bezier(.17,.67,.2,1);
+    box-shadow: 0 0 0 10px var(--card-light), 0 14px 40px var(--shadow);
+  }
+  .hub {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:54px; height:54px; border-radius:50%; z-index:4;
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+    display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+    box-shadow:0 4px 12px rgba(0,0,0,.3); border:4px solid var(--card);
+  }
+
+  .btn {
+    background:linear-gradient(135deg,var(--pink),var(--lav)); color:#fff; border:none;
+    border-radius:18px; padding:15px 28px; font-family:inherit; font-size:1.1rem; font-weight:600;
+    cursor:pointer; box-shadow:0 8px 20px rgba(255,107,179,0.35); transition:transform .15s, box-shadow .15s; width:100%;
+  }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 12px 26px rgba(255,107,179,0.45); }
+  .btn:active { transform:translateY(1px); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .btn.gold { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:#3a2e00; box-shadow:0 8px 20px rgba(240,165,0,0.35); }
+  .btn.ghost { background:transparent; border:2px solid var(--card-light); color:var(--muted); box-shadow:none; }
+
+  .spin-area { text-align:center; margin-top:22px; }
+
+  /* result card */
+  .result {
+    margin-top:20px; background:var(--card-light); border-radius:20px; padding:22px;
+    text-align:center; opacity:0; max-height:0; overflow:hidden; transition:all .5s ease;
+  }
+  .result.show { opacity:1; max-height:400px; padding:22px; }
+  .result .emoji { font-size:2.6rem; display:block; margin-bottom:8px; }
+  .result .challenge { font-family:'Caveat',cursive; font-size:1.9rem; color:var(--gold); line-height:1.2; margin-bottom:6px; }
+  .result .why { color:var(--muted); font-size:.95rem; margin-bottom:16px; }
+  .result .actions { display:flex; gap:10px; }
+  .result .actions .btn { font-size:1rem; padding:12px 18px; }
+
+  .toast {
+    position:fixed; top:30px; left:50%; transform:translateX(-50%) translateY(-120px);
+    background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:#3a2e00;
+    padding:14px 26px; border-radius:18px; font-weight:700; font-size:1.1rem;
+    box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:100; transition:transform .4s cubic-bezier(.2,1.4,.4,1);
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .confetti { position:fixed; top:-10px; width:10px; height:14px; z-index:90; pointer-events:none; border-radius:2px; }
+
+  .mini-note { font-size:.85rem; color:var(--muted); margin-top:14px; text-align:center; }
+  .done-count { color:var(--mint); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="toast" id="toast">+15 ✨</div>
+
+<div class="wrap">
+  <header>
+    <h1>Motivation Spinner</h1>
+    <div class="tag">Stuck on where to start? Let the wheel decide ✨</div>
+  </header>
+
+  <div class="hud">
+    <div class="chip"><span>⭐</span><span class="big" id="pointsDisplay">0</span><span>pts</span></div>
+    <div class="chip"><span>✅</span><span class="big done-count" id="doneDisplay">0</span><span>done</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Spin for a tiny mission 🎡</h2>
+    <p class="sub">Pick a vibe, give it a spin, and just try the one thing it lands on. That's it.</p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-cat="kickstart">⚡ Kick-start</button>
+      <button class="tab" data-cat="focus">🎯 Focus</button>
+      <button class="tab" data-cat="calm">🌿 Calm</button>
+      <button class="tab" data-cat="reset">🔄 Reset</button>
+    </div>
+
+    <div class="wheel-stage">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel"></div>
+      <div class="hub">🎡</div>
+    </div>
+
+    <div class="spin-area">
+      <button class="btn gold" id="spinBtn" onclick="spin()">SPIN! 🎯</button>
+    </div>
+
+    <div class="result" id="result">
+      <span class="emoji" id="rEmoji">✨</span>
+      <div class="challenge" id="rChallenge"></div>
+      <div class="why" id="rWhy"></div>
+      <div class="actions">
+        <button class="btn ghost" onclick="reSpin()">↻ Spin again</button>
+        <button class="btn" onclick="completeChallenge()">I did it! ✓</button>
+      </div>
+    </div>
+
+    <p class="mini-note">Rule of the game: you only have to try the thing for <b>2 minutes</b>. You can stop after — but you usually won't want to. 💪</p>
+  </div>
+</div>
+
+<script>
+  const categories = {
+    kickstart: {
+      color1:'#ff6bb3', color2:'#c08cff',
+      items:[
+        {t:'Set a 5-minute timer and start', e:'⏱️', w:'Starting is the hardest part — a timer makes it small.'},
+        {t:'Do the easiest step first', e:'🐣', w:'An easy win builds momentum for the hard stuff.'},
+        {t:'Stand up and stretch big', e:'🙆', w:'Moving your body wakes up your brain.'},
+        {t:'Tell someone your plan out loud', e:'🗣️', w:'Saying it makes it real and a little harder to skip.'},
+        {t:'Clear just your desk/space', e:'🧹', w:'A clear space makes starting feel less heavy.'},
+        {t:'Pick the ONE thing that matters most', e:'⭐', w:'You don\'t have to do everything — just the top one.'},
+        {t:'Put your phone in another room', e:'📵', w:'Out of sight, out of mind, into focus.'},
+        {t:'Write the first sentence/step badly', e:'✏️', w:'Bad and done beats perfect and never started.'},
+      ]
+    },
+    focus: {
+      color1:'#6bc6ff', color2:'#5fe3c0',
+      items:[
+        {t:'Work for 10 min, then break', e:'🍅', w:'Short sprints are easier than marathons.'},
+        {t:'Hide every tab but one', e:'🗂️', w:'One thing at a time = more brain power for it.'},
+        {t:'Put on focus music (no words)', e:'🎧', w:'Sound can drown out the urge to wander.'},
+        {t:'Make a 3-item to-do list', e:'📝', w:'Three is doable. Long lists scare your brain.'},
+        {t:'Sit in a different spot', e:'🪑', w:'A fresh spot can reset a stuck brain.'},
+        {t:'Say "just this one part" out loud', e:'🎯', w:'Shrinking the goal makes it easier to focus.'},
+        {t:'Get a glass of water first', e:'💧', w:'A tiny ritual signals "okay, focus time."'},
+      ]
+    },
+    calm: {
+      color1:'#5fe3c0', color2:'#6bc6ff',
+      items:[
+        {t:'Take 5 slow belly breaths', e:'🌬️', w:'Slow breathing tells your body you\'re safe.'},
+        {t:'Name 5 things you can see', e:'👀', w:'Grounding pulls you out of worry-spirals.'},
+        {t:'Unclench your jaw + shoulders', e:'😌', w:'We hold stress in our body without noticing.'},
+        {t:'Drink some water slowly', e:'💧', w:'A small calm action resets a frazzled moment.'},
+        {t:'Picture your calm place', e:'🏝️', w:'Your brain relaxes a little just imagining it.'},
+        {t:'Stretch your arms up high', e:'🙆', w:'A big stretch releases held-in tension.'},
+        {t:'Put a hand on your heart', e:'💛', w:'Gentle touch is soothing and steadying.'},
+      ]
+    },
+    reset: {
+      color1:'#ffd166', color2:'#f0a500',
+      items:[
+        {t:'Take a 3-minute walk', e:'🚶', w:'Movement clears mental fog fast.'},
+        {t:'Drink water + a quick snack', e:'🍎', w:'A hungry brain can\'t focus or feel motivated.'},
+        {t:'Splash cold water on your face', e:'💦', w:'It genuinely resets your nervous system.'},
+        {t:'Tidy one small thing', e:'🧺', w:'One tiny "done" makes the next thing easier.'},
+        {t:'Write down what\'s bugging you', e:'📓', w:'Getting it out of your head frees up space.'},
+        {t:'Change into comfy clothes', e:'🧦', w:'A fresh feeling can flip a stuck mood.'},
+        {t:'Step outside for fresh air', e:'🌤️', w:'A change of scene resets a stuck brain.'},
+      ]
+    }
+  };
+
+  let currentCat = 'kickstart';
+  let points = 0, done = 0, spinning = false, currentResult = null, rotation = 0;
+
+  const wheel = document.getElementById('wheel');
+
+  function buildWheel(){
+    const items = categories[currentCat].items;
+    const n = items.length;
+    const seg = 360/n;
+    const c1 = categories[currentCat].color1;
+    const c2 = categories[currentCat].color2;
+    // build conic gradient stripes
+    let stops = [];
+    for(let i=0;i<n;i++){
+      const col = i%2===0 ? c1 : c2;
+      stops.push(`${col} ${i*seg}deg ${(i+1)*seg}deg`);
+    }
+    wheel.style.background = `conic-gradient(${stops.join(',')})`;
+    // labels
+    wheel.querySelectorAll('.seg-label').forEach(e=>e.remove());
+    for(let i=0;i<n;i++){
+      const lbl = document.createElement('div');
+      lbl.className='seg-label';
+      lbl.textContent = items[i].e;
+      const angle = i*seg + seg/2;
+      lbl.style.cssText = `position:absolute; top:50%; left:50%; font-size:1.5rem;
+        transform: rotate(${angle}deg) translateY(-118px); transform-origin: center;`;
+      wheel.appendChild(lbl);
+    }
+  }
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      if(spinning) return;
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      currentCat = t.dataset.cat;
+      hideResult();
+      buildWheel();
+    });
+  });
+
+  function spin(){
+    if(spinning) return;
+    spinning = true;
+    hideResult();
+    document.getElementById('spinBtn').disabled = true;
+
+    const items = categories[currentCat].items;
+    const n = items.length;
+    const seg = 360/n;
+    const pick = Math.floor(Math.random()*n);
+    // pointer is at top (0deg / 360). We want the center of `pick` segment under the pointer.
+    const targetAngle = 360 - (pick*seg + seg/2);
+    const spins = 5; // full rotations for drama
+    rotation += spins*360 + (targetAngle - (rotation % 360));
+    wheel.style.transform = `rotate(${rotation}deg)`;
+
+    setTimeout(()=>{
+      currentResult = items[pick];
+      showResult(currentResult);
+      spinning = false;
+      document.getElementById('spinBtn').disabled = false;
+    }, 4600);
+  }
+
+  function showResult(r){
+    document.getElementById('rEmoji').textContent = r.e;
+    document.getElementById('rChallenge').textContent = r.t;
+    document.getElementById('rWhy').textContent = r.w;
+    document.getElementById('result').classList.add('show');
+    document.getElementById('spinBtn').textContent = 'Spin again 🎯';
+  }
+  function hideResult(){
+    document.getElementById('result').classList.remove('show');
+  }
+  function reSpin(){ hideResult(); setTimeout(spin, 300); }
+
+  function completeChallenge(){
+    points += 15; done += 1;
+    document.getElementById('pointsDisplay').textContent = points;
+    document.getElementById('doneDisplay').textContent = done;
+    showToast('+15 XP ⭐ Nice!');
+    fireConfetti();
+    hideResult();
+    document.getElementById('spinBtn').textContent = 'SPIN! 🎯';
+  }
+
+  // effects
+  let toastTimer;
+  function showToast(msg){
+    const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1700);
+  }
+  function fireConfetti(){
+    const colors=['#ffd166','#ff6bb3','#5fe3c0','#6bc6ff','#c08cff'];
+    for(let i=0;i<55;i++){
+      const c=document.createElement('div'); c.className='confetti';
+      c.style.left=Math.random()*100+'vw';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+      c.style.animation=`fall ${2+Math.random()*2}s linear forwards`;
+      c.style.transform=`rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(c); setTimeout(()=>c.remove(),4000);
+    }
+  }
+  const sheet=document.createElement('style');
+  sheet.textContent='@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:0;}}';
+  document.head.appendChild(sheet);
+
+  (function(){
+    const box=document.getElementById('stars');
+    for(let i=0;i<26;i++){
+      const s=document.createElement('div'); s.className='star'; s.textContent='✦';
+      s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+      s.style.animationDelay=Math.random()*3+'s'; s.style.fontSize=(8+Math.random()*12)+'px';
+      box.appendChild(s);
+    }
+  })();
+
+  buildWheel();
+</script>
+</body>
+</html>
